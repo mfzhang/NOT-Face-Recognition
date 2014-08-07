@@ -71,7 +71,7 @@ Mat filtered_HSV(const cv::Mat &input_HSV)
 			  int H = pixel[0];
 			  int S = pixel[1];
 			  int V = pixel[2];
-			  if ( (H >  0 && H <  45) && (S > 39 && S < 229) && (V > 51 && V < 242) )
+			  if ( (H >  0 && H <  25) && (S > 5 && S < 155) && (V > 55 && V < 255) )
 			  {
 				  pixel[0] = H;
 				  pixel[1] = S;

@@ -7,6 +7,8 @@
 
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/objdetect/objdetect.hpp"
 #include "color_constancy.hpp"
 #include "functions.h"
 
@@ -62,53 +64,89 @@ int main( int argc, char** argv )
   // 3
   // Gray world normalization ->
   // HSV filtering
-  Mat Kernel = (Mat_<uchar>(5,5) << 0,0,1,0,0
+  Mat Kernel1 = (Mat_<uchar>(5,5) << 0,0,1,0,0
 		                           ,0,1,1,1,0
 		                           ,1,1,1,1,1
 		                           ,0,1,1,1,0
 		                           ,0,0,1,0,0);
+  Mat Kernel2 = (Mat_<uchar>(5,5) << 0,1,1,1,0
+  		                            ,1,1,1,1,1
+  		                            ,1,1,1,1,1
+  		                            ,1,1,1,1,1
+  		                            ,0,1,1,1,0);
+  Mat Kernel3 = (Mat_<uchar>(7,7) << 0,0,0,1,0,0,0
+		                            ,0,0,1,1,1,0,0
+  		                            ,0,1,1,1,1,1,0
+  		                            ,1,1,1,1,1,1,1
+  		                            ,0,1,1,1,1,1,0
+  		                            ,0,0,1,1,1,0,0
+  		                            ,0,0,0,1,0,0,0);
+
   Mat image_HSV3;
-  Mat GW_RGB3 = b1.run2(original,1,2);
+  Mat GW_RGB3 = b1.run2(original,2,2);
   cvtColor(GW_RGB3, image_HSV3, COLOR_BGR2HSV);            // Convert GW_RGB3 to HSV color space
-  Mat RGB_filter3 = filtered_BGR(a.run(original));
   Mat HSV_filter3 = filtered_HSV(image_HSV3);              // Filter HSV based on paper
   cvtColor(HSV_filter3, HSV_filter3, COLOR_HSV2BGR);       // Convert back to BGR in order to print on screen
   Mat gray3(original.rows, original.cols, CV_8UC1);    //1 channel
   gray3 = thresholding(HSV_filter3, BINARY_THRESHOLD); //1 channel
   Mat dil3 = gray3.clone();                            //1 channel
-  morphologyEx(gray3, dil3, MORPH_CLOSE, Kernel, Point(-1,-1), CLOSE_ITERATION, BORDER_CONSTANT); //1 channel
+  morphologyEx(gray3, dil3, MORPH_CLOSE, Kernel3, Point(-1,-1), CLOSE_ITERATION, BORDER_CONSTANT); //1 channel
   Mat result3 = XOR(GW_RGB3, dil3); // XOR equalized with binary mask
   float toShowOrNot = calcPercentage(result3, PERCENTAGE_THRESHOLD); // calculate percentage
   cout << "skin factor: " << toShowOrNot << endl;
 
+  /// TODO some kind of post-processing on result in order to get more contrast.
+  /// TODO try Dilate instead of closing, but be gentle with it.
 
-  //////////////////////////////////////////////
-  // display original
-  namedWindow( "Original image", CV_WINDOW_NORMAL ); //CV_WINDOW_NORMAL -- WINDOW_AUTOSIZE
-  imshow( "Original image", input );
+  if(toShowOrNot > 18.0){
 
-  //if(toShowOrNot > 18.0){
-  // 3
-  namedWindow( "3: Image gray world norm", CV_WINDOW_NORMAL );
-  imshow( "3: Image gray world norm", GW_RGB3 );
+	  CascadeClassifier nibble_cascade;
+	  nibble_cascade.load("/usr/share/opencv/haarcascades/haarcascade_eye.xml");
 
-  namedWindow( "3: RGB filtered", CV_WINDOW_NORMAL );
-  imshow( "3: RGB filtered", RGB_filter3 );
+	  std::vector<Rect> nibbles;
+	  nibble_cascade.detectMultiScale(result3, nibbles, 1.1, 1, 0|CV_HAAR_SCALE_IMAGE, Size(10, 10), Size(100,100) );
+	  // Draw circles on the detected nibbles
+	  Mat tmp;
 
-  namedWindow( "3: HSV filtered", CV_WINDOW_NORMAL );
-  imshow( "3: HSV filtered", HSV_filter3 );
+	  // Nibble search and cutting
+	  for( int i = 0; i < nibbles.size(); i++ )
+	  {
+		  Point center( nibbles[i].x + nibbles[i].width*0.5, nibbles[i].y + nibbles[i].height*0.5 );
+		  ellipse(original, center, Size( nibbles[i].width*0.5, nibbles[i].height*0.5), 0, 0, 360, Scalar( 255, 0, 0 ), 4, 8, 0 );
+		  Rect ROI(center.x - nibbles[i].width * 0.5, center.y - nibbles[i].height * 0.5, nibbles[i].width, nibbles[i].height );
+		  GW_RGB3(ROI).copyTo(tmp);
 
-  namedWindow( "3: thresholded", CV_WINDOW_NORMAL );
-  imshow( "3: thresholded", gray3 );
+		  std::stringstream ss;
+		  ss << "ROI (" << i << ") :";
+		  imshow(ss.str(), tmp);
+		  waitKey(0);
+	  }
 
-  namedWindow( "3: dilated", CV_WINDOW_NORMAL );
-  imshow( "3: dilated", dil3 );
 
-  namedWindow( "3: result", CV_WINDOW_NORMAL );
-  imshow( "3: result", result3 );
+	  //////////////////////////////////////////////
+	  // display images
 
-  //}
-  waitKey(0);
+	  // 3
+	  namedWindow( "3: Image gray world norm", CV_WINDOW_NORMAL );
+	  imshow( "3: Image gray world norm", GW_RGB3 );
+
+	  namedWindow( "3: HSV filtered", CV_WINDOW_NORMAL );
+	  imshow( "3: HSV filtered", HSV_filter3 );
+
+	  namedWindow( "3: thresholded", CV_WINDOW_NORMAL );
+	  imshow( "3: thresholded", gray3 );
+
+	  namedWindow( "3: dilated", CV_WINDOW_NORMAL );
+	  imshow( "3: dilated", dil3 );
+
+	  namedWindow( "3: result", CV_WINDOW_NORMAL );
+	  imshow( "3: result", result3 );
+
+	  namedWindow( "Original image", CV_WINDOW_NORMAL ); //CV_WINDOW_NORMAL -- WINDOW_AUTOSIZE
+	  imshow( "Original image", original );
+
+	  waitKey(0);
+  }
 
   return 0;
 }

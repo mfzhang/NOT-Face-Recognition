@@ -1,7 +1,6 @@
 #!/bin/bash
 
-FILES=( $(find images/debug -name '*.jpg') )
-
+FILES=( $(find images/dataset -name '*.jpg') )
 
 FILE_COUNT=${#FILES[@]}
 
@@ -10,7 +9,6 @@ do
    nr=$((i+1))
    echo "iterate: $nr"
    echo "filename: ${FILES[$i]}"
-   echo "ON"
    echo "${FILES[$i]}"
    ./Debug/HIT2600NLDB ${FILES[$i]}
    echo "=============================="

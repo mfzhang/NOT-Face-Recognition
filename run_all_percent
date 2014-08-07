@@ -1,0 +1,23 @@
+#!/bin/bash
+
+#FILES_ON=($(ls ~/workspace/HIT2600NLDB/images/on) )
+#FILES_OFF=($(ls ~/workspace/HIT2600NLDB/images/off) )
+
+FILES_ON=( $(find images/on -name '*.jpg') )
+FILES_OFF=( $(find images/off -name '*.jpg') )
+
+FILE_COUNT=${#FILES_ON[@]}
+
+for ((i=0 ; i< $FILE_COUNT; i++))
+do
+   nr=$((i+1))
+   echo "iterate: $nr"
+   echo "filename: ${FILES_ON[$i]}"
+   echo "ON"
+   echo "${FILES_ON[$f]}"
+   ./Debug/HIT2600NLDB ${FILES_ON[$i]}
+   echo "OFF"
+   echo "${FILES_OFF[$f]}"
+   ./Debug/HIT2600NLDB ${FILES_OFF[$i]}	
+   echo "=============================="
+done
