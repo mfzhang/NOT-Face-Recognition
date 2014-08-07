@@ -1,10 +1,3 @@
-/*
- * color_constancy.hpp
- *
- *  Created on: Aug 6, 2014
- *      Author: ardillo
- */
-
 #ifndef COLOR_CONSTANCY_HPP
 #define COLOR_CONSTANCY_HPP
 

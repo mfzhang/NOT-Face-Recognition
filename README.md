@@ -6,6 +6,7 @@ This project is done for the anual HIT2600NLDB (2014).<br>
 
 The program does strange things with 'faces'. <br>
 
-Use program as:
+Use program as: <br>
+<code>
 	./HIT2600NLDB image.png
-
+</code>
