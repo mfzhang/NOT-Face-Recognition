@@ -5,6 +5,7 @@
  *      Author: ardillo
  */
 
+#include <iostream>
 #include <opencv2/opencv.hpp>
 #include "color_constancy.hpp"
 #include "functions.h"
@@ -31,7 +32,7 @@ int main( int argc, char** argv )
   //////////////////////////////////////////////
   // resized original
   Mat original = input.clone();
-  //original.create(240,320, CV_8UC(3));
+  //original.create(480,640, CV_8UC(3));
   //resize(input, original, original.size(), 0, 0, INTER_NEAREST);
 
 
@@ -41,27 +42,44 @@ int main( int argc, char** argv )
   //color_correction::maxRGB b3;
   //color_correction::max_edge b4;
 
-  /*
+/*
   imshow("original",original);
   imshow("contrast stretching",a.run(original));
-  imshow("gray world RGB",b1.run2(original,1,2));
-  imshow("gray world Lab",b1.run1(original,1));
+  imshow("gray world RGB",b1.run2(original,1,2));   // 1
+  imshow("gray world Lab",b1.run1(original,1));     // 1
   imshow("Shades of gray",b1.run2(original,6,2));
-  imshow("maxRGB",b3.run(original,6,0));
+  imshow("maxRGB",b3.run(original,6,0));            // 1
   imshow("gray edge",b2.run(original,1,0));
   imshow("max edge",b4.run(original,1,0));
-  */
+*/
+
+#define BINARY_THRESHOLD 80
+#define PERCENTAGE_THRESHOLD 0
+#define CLOSE_ITERATION 4
 
 
   //////////////////////////////////////////////
   // 3
   // Gray world normalization ->
   // HSV filtering
+  Mat Kernel = (Mat_<uchar>(5,5) << 0,0,1,0,0
+		                           ,0,1,1,1,0
+		                           ,1,1,1,1,1
+		                           ,0,1,1,1,0
+		                           ,0,0,1,0,0);
   Mat image_HSV3;
   Mat GW_RGB3 = b1.run2(original,1,2);
   cvtColor(GW_RGB3, image_HSV3, COLOR_BGR2HSV);            // Convert GW_RGB3 to HSV color space
-  Mat HSV_filter3 = filtered_HSV(image_HSV3);          // Filter HSV based on paper
-  cvtColor(HSV_filter3, HSV_filter3, COLOR_HSV2BGR);   // Convert back to BGR in order to print on screen
+  Mat RGB_filter3 = filtered_BGR(a.run(original));
+  Mat HSV_filter3 = filtered_HSV(image_HSV3);              // Filter HSV based on paper
+  cvtColor(HSV_filter3, HSV_filter3, COLOR_HSV2BGR);       // Convert back to BGR in order to print on screen
+  Mat gray3(original.rows, original.cols, CV_8UC1);    //1 channel
+  gray3 = thresholding(HSV_filter3, BINARY_THRESHOLD); //1 channel
+  Mat dil3 = gray3.clone();                            //1 channel
+  morphologyEx(gray3, dil3, MORPH_CLOSE, Kernel, Point(-1,-1), CLOSE_ITERATION, BORDER_CONSTANT); //1 channel
+  Mat result3 = XOR(GW_RGB3, dil3); // XOR equalized with binary mask
+  float toShowOrNot = calcPercentage(result3, PERCENTAGE_THRESHOLD); // calculate percentage
+  cout << "skin factor: " << toShowOrNot << endl;
 
 
   //////////////////////////////////////////////
@@ -69,13 +87,27 @@ int main( int argc, char** argv )
   namedWindow( "Original image", CV_WINDOW_NORMAL ); //CV_WINDOW_NORMAL -- WINDOW_AUTOSIZE
   imshow( "Original image", input );
 
+  //if(toShowOrNot > 18.0){
   // 3
   namedWindow( "3: Image gray world norm", CV_WINDOW_NORMAL );
   imshow( "3: Image gray world norm", GW_RGB3 );
 
+  namedWindow( "3: RGB filtered", CV_WINDOW_NORMAL );
+  imshow( "3: RGB filtered", RGB_filter3 );
+
   namedWindow( "3: HSV filtered", CV_WINDOW_NORMAL );
   imshow( "3: HSV filtered", HSV_filter3 );
 
+  namedWindow( "3: thresholded", CV_WINDOW_NORMAL );
+  imshow( "3: thresholded", gray3 );
+
+  namedWindow( "3: dilated", CV_WINDOW_NORMAL );
+  imshow( "3: dilated", dil3 );
+
+  namedWindow( "3: result", CV_WINDOW_NORMAL );
+  imshow( "3: result", result3 );
+
+  //}
   waitKey(0);
 
   return 0;
