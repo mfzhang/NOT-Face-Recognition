@@ -1,0 +1,9 @@
+#!/bin/bash
+
+FILES=~/workspace/HIT2600NLDB/images/*
+
+for f in $FILES
+do
+   echo "file: $f"
+   ./Debug/HIT2600NLDB $f
+done
