@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FILES=( $(find images/dataset_with_no_targets -name '*.jpg') )
+FILES=( $(find images/testset -name '*.*') )
 
 FILE_COUNT=${#FILES[@]}
 
