@@ -38,7 +38,7 @@ int main( int argc, char** argv )
   //resize(input, original, original.size(), 0, 0, INTER_NEAREST);
 
 
-  color_correction::contrast_stretching a;
+  //color_correction::contrast_stretching a;
   color_correction::gray_world b1;
   //color_correction::gray_edge b2;
   //color_correction::maxRGB b3;

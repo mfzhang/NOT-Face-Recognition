@@ -55,12 +55,13 @@ Mat normalized_RGB(const cv::Mat &input)
  * V > 0.2  and V < 0.95
  * Where H,S,V are in the range of 0...1
  *
-/*/////
-/*/////
  * OpenCV uses the ranges H=0...180 S=0...255 V=0.255 so this means the following settings
  * H >  0    and H < 45
  * S > 38,25 and S < 229,5
  * V > 51    and V < 242.25
+ *//////////
+/*
+ * Momenteel andere drempel waarde als hierboven vermeldt
  */
 Mat filtered_HSV(const cv::Mat &input_HSV)
 {
